@@ -7,10 +7,10 @@ import time
 from Queue import Queue
 import configData
 
-buffer_queue = Queue()  # Create a buffer Queue of size 128 frames
+buffer_queue = Queue(28)  # Create a buffer Queue of size 128 frames
 
 
-#Creates directoru structure for new user.
+#Creates directory structure for new user.
 def create_new_Record(user_ID):
     import os
     recordPath = configData.PARENT_PATH+user_ID
@@ -55,18 +55,16 @@ def DetectEyes(Image):
                     return CroppedFace
 
 
-
 def captureFacePhoto(capture_device, position_ID):
     face_cascade = cv2.CascadeClassifier(configData.HAAR_FACE_CASCADE)
     eye_cascade = cv2.CascadeClassifier(configData.HAAR_EYE_CASCADE)
-    print position_ID
     time.sleep(1)
     while True:
         # ret,image = capture_device.read()
         image = capture_device.get()
         # image = capture_device.frame.copy()
         gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY)
-        if np.average(gray)> 110:
+        if np.average(gray)> 100:
             faces = face_cascade.detectMultiScale(gray, 1.3, 5)         # Detect the faces and store the positions
             for (x, y, w, h) in faces:                                  # Frames  LOCATION X, Y  WIDTH, HEIGHT
                 FaceImage = gray[y - int(h / 2): y + int(h * 1.5),
@@ -99,7 +97,7 @@ def showLiveFeed(frame_buffer):
         cv2.imshow("LiveFeed",image)
         if cv2.waitKey(1) & 0xFF == (ord('q')):
             break
-
+    cv2.destroyWindow("LiveFeed")
     return
 
 def daemonVideoCapture(capture_device,queue):
@@ -108,7 +106,7 @@ def daemonVideoCapture(capture_device,queue):
         success,image = capture_device.read()
         queue.put(image)
 
-def init_threads():
+def init_threads(captureDevice):
     videoThread = threading.Thread(target=daemonVideoCapture,args = (captureDevice,buffer_queue,))
     videoThread.setDaemon(True)
     videoThread.start()
@@ -144,8 +142,10 @@ def Main():
             print 'Wait for 1 second for capture of face features'
             path = configData.PARENT_PATH+'UID_001/'+str(count)
             # captureFacePhoto(captureDevice,path)
-            captureFacePhoto(buffer_queue,path)
-            count+=1
+            ret = captureFacePhoto(buffer_queue,path)
+            print ret
+            if ret.__contains__('Success'):
+                count+=1
         elif count >10 :
             print 'DataSet complete, need only 10 photos'
             return
