@@ -57,7 +57,7 @@ def recognize_Eigen(EIGEN):
 def recognise_Fisher():
     pass
 
-def recognize_LBPH():
+def recognize_LBPH(LBPH):
     while True:
         frame = buffer_queue.get()
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
@@ -78,10 +78,11 @@ def init_threads(captureDevice):
 
 def Main():
     import TrainerHandler
-    captureDevice = createCaptureDevice(0)
+    captureDevice = createCaptureDevice(1)
     init_threads(captureDevice)
     Eigen,Lbph = TrainerHandler.generate_trainer(configData.PARENT_PATH)
-    recognize_Eigen(Eigen)
+    # recognize_Eigen(Eigen)
+    recognize_LBPH(Lbph)
 
 if __name__=="__main__":
     Main()
